@@ -1,44 +1,66 @@
-import React from "react";
-import { request, gql } from "graphql-request";
-import { useQuery } from "react-query";
+import {request,gql} from 'graphql-request'
+import {
+  useQuery,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
 
-const endpoint = "https://swapi-graphql.netlify.app/.netlify/functions/index";
-const FILMS_QUERY = gql`
-  query Query {
-  allFilms {
-    films {
-      title
-      director
-      releaseDate
-      speciesConnection {
-        species {
-          name
-          classification
-          homeworld {
-            name
+const endpoint = 'https://graphqlzero.almansi.me/api'
+
+
+function usePosts() {
+  return useQuery({
+    queryKey: ['posts'],
+    queryFn: async () => {
+      const {
+        posts: { data },
+      } = await request(
+          endpoint,
+          gql`
+          query {
+            posts {
+              data {
+                id
+                title
+              }
+            }
           }
-        }
-      }
-    }
-  }
+        `,
+      )
+      console.dir(data); // debug - remove 
+      return data
+    },
+  })
 }
-`;
 
-export default function App() {
-  const { data, isLoading, error } = useQuery("launches", () => {
-    return request(endpoint, FILMS_QUERY);
-  });
-
-  console.dir(data); 
-
-  if (isLoading) return "Loading...";
-  if (error) return <pre>{error.message}</pre>;
+function App() {
+  const queryClient = useQueryClient()
+  const { status, data, error, isFetching } = usePosts()
 
   return (
       <div>
-        <h1>SpaceX Launches</h1>
-        <ul>
-        </ul>
+        <h1>Posts</h1>
+        <div>
+          {status === 'pending' ? (
+              'Loading...'
+          ) : status === 'error' ? (
+              <span>Error: {error.message}</span>
+          ) : (
+              <>
+                <div>
+                  {data.map((post) => (
+                      <p key={post.id}>
+
+                      </p>
+                  ))}
+                </div>
+                <div>{isFetching ? 'Background Updating...' : ' '}</div>
+              </>
+          )}
+        </div>
       </div>
-  );
+  )
 }
+
+export default App;
