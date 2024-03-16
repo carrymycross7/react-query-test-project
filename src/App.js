@@ -1,25 +1,44 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { request, gql } from "graphql-request";
+import { useQuery } from "react-query";
 
-function App() {
+const endpoint = "https://swapi-graphql.netlify.app/.netlify/functions/index";
+const FILMS_QUERY = gql`
+  query Query {
+  allFilms {
+    films {
+      title
+      director
+      releaseDate
+      speciesConnection {
+        species {
+          name
+          classification
+          homeworld {
+            name
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+export default function App() {
+  const { data, isLoading, error } = useQuery("launches", () => {
+    return request(endpoint, FILMS_QUERY);
+  });
+
+  console.dir(data); 
+
+  if (isLoading) return "Loading...";
+  if (error) return <pre>{error.message}</pre>;
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <div>
+        <h1>SpaceX Launches</h1>
+        <ul>
+        </ul>
+      </div>
   );
 }
-
-export default App;
